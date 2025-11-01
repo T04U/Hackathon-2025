@@ -1,0 +1,54 @@
+document.getElementById('profileForm').addEventListener('submit', async function(event) {
+  event.preventDefault();
+
+  const profile = {
+    academic: document.getElementById('academic').value.trim(),
+    career: document.getElementById('career').value.trim(),
+    location: document.getElementById('location').value.trim(),
+    financial: document.getElementById('financial').value.trim(),
+    identity: document.getElementById('identity').value.trim(),
+    talents: document.getElementById('talents').value.trim(),
+    preferences: document.getElementById('preferences').value.trim()
+  };
+
+  // Show loading
+  const resultsDiv = document.getElementById('results');
+  resultsDiv.innerHTML = '<p>Searching for scholarships…</p>';
+
+  try {
+    // Example: call your back-end API endpoint
+    const response = await fetch('/api/matchScholarships', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(profile)
+    });
+
+    if (!response.ok) {
+      throw new Error('Network response was not ok: ' + response.status);
+    }
+
+    const scholarships = await response.json();
+
+    if (scholarships.length === 0) {
+      resultsDiv.innerHTML = '<p>No scholarships found matching your profile — try adjusting your answers.</p>';
+    } else {
+      resultsDiv.innerHTML = '<h2>Matching Scholarships</h2>';
+      scholarships.forEach(s => {
+        const div = document.createElement('div');
+        div.classList.add('scholarship');
+        div.innerHTML = `
+          <h3>${s.title}</h3>
+          <p><strong>Amount:</strong> ${s.amount}</p>
+          <p><strong>Deadline:</strong> ${s.deadline}</p>
+          <p>${s.description}</p>
+          <p><a href="${s.link}" target="_blank">More info & apply</a></p>
+        `;
+        resultsDiv.appendChild(div);
+      });
+    }
+
+  } catch (err) {
+    console.error('Error fetching scholarships:', err);
+    resultsDiv.innerHTML = `<p>Error retrieving scholarships: ${err.message}</p>`;
+  }
+});
